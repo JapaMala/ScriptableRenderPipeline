@@ -11,9 +11,6 @@ using UnityEngine.Experimental.UIElements.StyleSheets;
 using UnityEngine.Rendering;
 using Edge = UnityEditor.Experimental.UIElements.GraphView.Edge;
 using Object = UnityEngine.Object;
-#if UNITY_2018_1
-using GeometryChangedEvent = UnityEngine.Experimental.UIElements.PostLayoutEvent;
-#endif
 
 namespace UnityEditor.ShaderGraph.Drawing
 {
@@ -93,6 +90,8 @@ namespace UnityEditor.ShaderGraph.Drawing
                         if (showInProjectRequested != null)
                             showInProjectRequested();
                     }
+                    GUILayout.FlexibleSpace();
+                    GUILayout.EndHorizontal();
                 });
             Add(toolbar);
 
