@@ -8,18 +8,12 @@ namespace UnityEditor.ShaderGraph
     [Title("Input", "Texture", "Texture 2D Texel Size")]
     public class Texture2DTexelSizeNode : AbstractMaterialNode, IGeneratesBodyCode, IMayRequireMeshUV
     {
-        public const int OutputSlotRGBAId = 0;
-        public const int OutputSlotIWId = 2;
-        public const int OutputSlotIHId = 3;
-        public const int OutputSlotWId = 4;
-        public const int OutputSlotHId = 5;
-        public const int TextureInputId = 1;
+        public const int OutputSlotISId = 1;
+        public const int OutputSlotSId = 2;
+        public const int TextureInputId = 0;
 
-        const string kOutputSlotRGBAName = "Size";
-        const string kOutputSlotRName = "1/W";
-        const string kOutputSlotGName = "1/H";
-        const string kOutputSlotBName = "W";
-        const string kOutputSlotAName = "H";
+        const string kOutputSlotISName = "1/Size";
+        const string kOutputSlotSName = "Size";
         const string kTextureInputName = "Texture";
 
         public override bool hasPreview { get { return false; } }
@@ -37,30 +31,19 @@ namespace UnityEditor.ShaderGraph
 
         public sealed override void UpdateNodeAfterDeserialization()
         {
-            AddSlot(new Vector4MaterialSlot(OutputSlotRGBAId, kOutputSlotRGBAName, kOutputSlotRGBAName, SlotType.Output, Vector4.zero, ShaderStageCapability.Fragment));
-            AddSlot(new Vector1MaterialSlot(OutputSlotIWId, kOutputSlotRName, kOutputSlotRName, SlotType.Output, 0, ShaderStageCapability.Fragment));
-            AddSlot(new Vector1MaterialSlot(OutputSlotIHId, kOutputSlotGName, kOutputSlotGName, SlotType.Output, 0, ShaderStageCapability.Fragment));
-            AddSlot(new Vector1MaterialSlot(OutputSlotWId, kOutputSlotBName, kOutputSlotBName, SlotType.Output, 0, ShaderStageCapability.Fragment));
-            AddSlot(new Vector1MaterialSlot(OutputSlotHId, kOutputSlotAName, kOutputSlotAName, SlotType.Output, 0, ShaderStageCapability.Fragment));
+            AddSlot(new Vector2MaterialSlot(OutputSlotISId, kOutputSlotISName, kOutputSlotISName, SlotType.Output, Vector2.one, ShaderStageCapability.Fragment));
+            AddSlot(new Vector2MaterialSlot(OutputSlotSId, kOutputSlotSName, kOutputSlotSName, SlotType.Output, Vector2.one, ShaderStageCapability.Fragment));
             AddSlot(new Texture2DInputMaterialSlot(TextureInputId, kTextureInputName, kTextureInputName));
-            RemoveSlotsNameNotMatching(new[] { OutputSlotRGBAId, OutputSlotIWId, OutputSlotIHId, OutputSlotWId, OutputSlotHId, TextureInputId });
+            RemoveSlotsNameNotMatching(new[] { OutputSlotISId, OutputSlotSId, TextureInputId });
         }
 
         // Node generations
         public virtual void GenerateNodeCode(ShaderGenerator visitor, GenerationMode generationMode)
         {
-            var id = GetSlotValue(TextureInputId, generationMode);
-            var result = string.Format("{0}4 {1} = {2}_TexelSize;"
-                    , precision
-                    , GetVariableNameForSlot(OutputSlotRGBAId)
-                    , id);
+            var id = GetSlotValue(TextureInputId, generationMode) + "_TexelSize";
 
-            visitor.AddShaderChunk(result, true);
-
-            visitor.AddShaderChunk(string.Format("{0} {1} = {2}.r;", precision, GetVariableNameForSlot(OutputSlotIWId), GetVariableNameForSlot(OutputSlotRGBAId)), true);
-            visitor.AddShaderChunk(string.Format("{0} {1} = {2}.g;", precision, GetVariableNameForSlot(OutputSlotIHId), GetVariableNameForSlot(OutputSlotRGBAId)), true);
-            visitor.AddShaderChunk(string.Format("{0} {1} = {2}.b;", precision, GetVariableNameForSlot(OutputSlotWId), GetVariableNameForSlot(OutputSlotRGBAId)), true);
-            visitor.AddShaderChunk(string.Format("{0} {1} = {2}.a;", precision, GetVariableNameForSlot(OutputSlotHId), GetVariableNameForSlot(OutputSlotRGBAId)), true);
+            visitor.AddShaderChunk(string.Format("{0}2 {1} = {2}.xy;", precision, GetVariableNameForSlot(OutputSlotISId), id), true);
+            visitor.AddShaderChunk(string.Format("{0}2 {1} = {2}.zw;", precision, GetVariableNameForSlot(OutputSlotSId), id), true);
         }
 
         public bool RequiresMeshUV(UVChannel channel, ShaderStageCapability stageCapability)
