@@ -276,7 +276,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
         void InitializeRenderTextures()
         {
-            if (!m_Asset.renderPipelineSettings.supportForwardOnly)
+            if (!m_Asset.renderPipelineSettings.supportOnlyForward)
                 m_GbufferManager.CreateBuffers();
 
             if (m_Asset.renderPipelineSettings.supportDBuffer)
@@ -912,7 +912,7 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     m_MaterialList.ForEach(material => material.Bind());
 
                     // Frustum cull density volumes on the CPU. Can be performed as soon as the camera is set up.
-                    DensityVolumeList densityVolumes = m_VolumetricLightingSystem.PrepareVisibleDensityVolumeList(hdCamera, cmd);
+                    DensityVolumeList densityVolumes = m_VolumetricLightingSystem.PrepareVisibleDensityVolumeList(hdCamera, cmd, m_Time);
 
                     // Note: Legacy Unity behave like this for ShadowMask
                     // When you select ShadowMask in Lighting panel it recompile shaders on the fly with the SHADOW_MASK keyword.
@@ -936,8 +936,6 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     bool forcePrepassForDecals = m_DbufferManager.vsibleDecalCount > 0;
                     RenderDepthPrepass(m_CullResults, hdCamera, renderContext, cmd, forcePrepassForDecals);
 
-                    RenderObjectsVelocity(m_CullResults, hdCamera, renderContext, cmd);
-
                     // This will bind the depth buffer if needed for DBuffer)
                     RenderDBuffer(hdCamera, cmd);
 
@@ -947,6 +945,10 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
                     CopyDepthBufferIfNeeded(cmd);
                     RenderDepthPyramid(hdCamera, cmd, renderContext, FullScreenDebugMode.DepthPyramid);
 
+                    // TODO: In the future we will render object velocity at the same time as depth prepass (we need C++ modification for this)
+                    // Once the C++ change is here we will first render all object without motion vector then motion vector object
+                    // We can't currently render object velocity after depth prepass because if there is no depth prepass we can have motion vector write that should have been rejected
+                    RenderObjectsVelocity(m_CullResults, hdCamera, renderContext, cmd);
                     RenderCameraVelocity(m_CullResults, hdCamera, renderContext, cmd);
 
                     // Depth texture is now ready, bind it (Depth buffer could have been bind before if DBuffer is enable)
@@ -1644,6 +1646,14 @@ namespace UnityEngine.Experimental.Rendering.HDPipeline
 
                 HDUtils.DrawFullScreen(cmd, hdCamera, m_CameraMotionVectorsMaterial, m_VelocityBuffer, m_CameraDepthStencilBuffer, null, 0);
                 PushFullScreenDebugTexture(hdCamera, cmd, m_VelocityBuffer, FullScreenDebugMode.MotionVectors);
+
+#if UNITY_EDITOR
+                // In scene view there is no motion vector, so we clear the RT to black
+                if (hdCamera.camera.cameraType == CameraType.SceneView)
+                {
+                    HDUtils.SetRenderTarget(cmd, hdCamera, m_VelocityBuffer, m_CameraDepthStencilBuffer, ClearFlag.Color, CoreUtils.clearColorAllBlack);
+                }
+#endif
             }
         }
 

@@ -2,7 +2,6 @@
 # Changelog
 
 ## [2018.2 undecided]
-- Fix issue with LOD transition and instancing
 
 ### Improvements
 - Add stripper of shader variant when building a player. Save shader compile time.
@@ -12,9 +11,17 @@
 - Support correctly scene selection for alpha tested object
 - Add per light shadow mask mode control (i.e shadow mask distance and shadow mask). It use the option NonLightmappedOnly
 - Add geometric filtering to Lit shader (allow to reduce specular aliasing)
+- Allow to double click on a render pipeline asset to setup it automatically in GraphicSettings.
 
 ### Changed, Removals and deprecations
 - Removed GlobalLightLoopSettings.maxPlanarReflectionProbes and instead use value of GlobalLightLoopSettings.planarReflectionProbeCacheSize
+- Changed SupportForwardOnly to SupportOnlyForward in render pipeline settings
+- Remove EmissiveIntensity parameter and change EmissiveColor to be HDR (Matching Builtin Unity behavior) - Data need to be updated
+
+### Bug fixes
+- Fix issue with LOD transition and instancing
+- Fix discrepency between object motion vector and camera motion vector
+- Fix issue with spot and dir light gizmo axis not highlighted correctly
 
 ## [2018.1 undecided]
 
@@ -27,6 +34,7 @@
 - The VolumetricLightingSystem now uses RTHandles, which allows to save memory by sharing buffers between different cameras (history buffers are not shared), and reduce reallocation frequency by reallocating buffers only if the rendering resolution increases (and suballocating within existing buffers if the rendering resolution decreases)
 - Add a Volumetric Dimmer slider to lights to control the intensity of the scattered volumetric lighting
 - Add UV tiling and offset support for decals.
+- Add mipmapping support for volume 3D mask textures
 
 ### Changed, Removals and deprecations
 - Remove Resource folder of PreIntegratedFGD and add the resource to RenderPipeline Asset
@@ -55,6 +63,7 @@
 - Fix the debug window being emptied on SRP asset reload
 - Fix issue with debug mode not correctly clearing the GBuffer in editor after a resize
 - Fix issue with ResetMaterialKeyword not resetting correctly ToggleOff/Roggle Keyword
+- Fix issue with motion vector not render correctly if there is no depth prepass in deferred
 
 ## [2018.1.0f2]
 
